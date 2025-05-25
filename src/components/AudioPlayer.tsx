@@ -16,6 +16,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState([0.5]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -26,24 +27,41 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.play().catch(console.error);
+        setIsLoading(true);
+        audioRef.current
+          .play()
+          .then(() => setIsLoading(false))
+          .catch((error) => {
+            console.error("Audio play error:", error);
+            setIsLoading(false);
+          });
       } else {
         audioRef.current.pause();
+        setIsLoading(false);
       }
     }
   }, [isPlaying]);
 
   return (
     <div className="flex items-center gap-3">
-      <audio ref={audioRef} src={src} loop />
+      <audio
+        ref={audioRef}
+        src={src}
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+      />
 
       <Button
         variant="ghost"
         size="icon"
         onClick={onPlayPause}
-        className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all"
+        disabled={isLoading}
+        className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all disabled:opacity-50"
       >
-        {isPlaying ? (
+        {isLoading ? (
+          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : isPlaying ? (
           <Pause className="h-5 w-5 text-white" />
         ) : (
           <Play className="h-5 w-5 text-white ml-0.5" />
